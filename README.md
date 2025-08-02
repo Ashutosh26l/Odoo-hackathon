@@ -87,7 +87,7 @@
 
 <hr/>
 <h2>⚡ Installation</h2>
-<pre><code>git clone https://github.com/your-username/quickdesk-helpdesk-system.git
+<pre><code>git clone https://github.com/Ashutosh26l/Odoo-hackathon.git
 cd quickdesk-helpdesk-system</code></pre>
 
 <h3>1 – Install dependencies</h3>
