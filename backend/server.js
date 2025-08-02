@@ -61,7 +61,7 @@ const verifyAgent = async (req, res, next) => {
 
 // POST /signup route for user registration
 app.post('/signup', async (req, res) => {
-  const { name, gender, email, password, category, role = 'end_user' } = req.body;
+  const { name, gender, email, password, category } = req.body; // Removed role parameter
 
   if (!name || !gender || !email || !password || !category) {
     return res.status(400).json({ message: 'All fields are required' });
@@ -81,9 +81,10 @@ app.post('/signup', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Removed role from insert - database will use default 'end-user'
     const { data, error } = await supabase
       .from('users')
-      .insert([{ name, gender, email, password: hashedPassword, category, role }])
+      .insert([{ name, gender, email, password: hashedPassword, category }])
       .select();
 
     if (error) {
@@ -139,14 +140,15 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Protected route to get user info
+// Protected route to get user profile info
 app.get('/profile', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
     
+    // Fetch all profile fields including name, gender, category
     const { data, error } = await supabase
       .from('users')
-      .select('id, email, role, name')
+      .select('id, name, gender, email, category, role, created_at')
       .eq('id', userId)
       .single();
 
@@ -154,14 +156,121 @@ app.get('/profile', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    res.status(200).json({ user: data });
+    // Return complete user profile
+    res.status(200).json({ 
+      user: {
+        id: data.id,
+        name: data.name,
+        gender: data.gender,
+        email: data.email,
+        category: data.category,
+        role: data.role,
+        created_at: data.created_at
+      }
+    });
   } catch (err) {
-    console.error(err);
+    console.error('Profile fetch error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// GET /tickets route for end users (using your existing schema)
+// PUT /profile route to update user profile
+app.put('/profile', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, gender, category } = req.body;
+
+    // Validate required fields
+    if (!name || !gender || !category) {
+      return res.status(400).json({ message: 'Name, gender, and category are required' });
+    }
+
+    // Update user profile (email and role should not be editable)
+    const { data, error } = await supabase
+      .from('users')
+      .update({ 
+        name, 
+        gender, 
+        category 
+      })
+      .eq('id', userId)
+      .select('id, name, gender, email, category, role, created_at')
+      .single();
+
+    if (error) {
+      return res.status(400).json({ message: 'Error updating profile: ' + error.message });
+    }
+
+    res.status(200).json({ 
+      message: 'Profile updated successfully',
+      user: data
+    });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+// POST /upgrade-request  -> end-user asks to become agent
+app.post('/upgrade-request', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Fetch user to confirm role
+    const { data: userData, error: userErr } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (userErr || !userData) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    if (userData.role !== 'end-user') {
+      return res.status(400).json({ message: 'Only end-users can request an upgrade' });
+    }
+
+    // Prevent duplicate pending requests
+    const { data: existing } = await supabase
+      .from('approval')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+      .single();
+
+    if (existing) {
+      return res.status(400).json({ message: 'You already have a pending request' });
+    }
+
+    // Insert new approval request - Using double quotes for current_role
+    const { data, error } = await supabase
+      .from('approval')
+      .insert([{
+        user_id: userId,
+        current_role: 'end-user',      // This will work with double quotes in table
+        requested_role: 'agent',
+        status: 'pending'
+      }])
+      .select();
+
+    if (error) {
+      return res.status(400).json({ message: 'Error submitting request: ' + error.message });
+    }
+
+    res.status(201).json({ message: 'Upgrade request created', request: data[0] });
+  } catch (err) {
+    console.error('Upgrade request error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+
+// GET /tickets route for end users
 app.get('/tickets', verifyToken, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -262,7 +371,7 @@ app.put('/agent/tickets/:id/status', verifyToken, verifyAgent, async (req, res) 
   }
 });
 
-// POST /agent/tickets/:id/comment - Add comment to ticket (using your conversations table)
+// POST /agent/tickets/:id/comment - Add comment to ticket
 app.post('/agent/tickets/:id/comment', verifyToken, verifyAgent, async (req, res) => {
   try {
     const ticketId = req.params.id;
@@ -284,7 +393,7 @@ app.post('/agent/tickets/:id/comment', verifyToken, verifyAgent, async (req, res
       return res.status(404).json({ message: 'Ticket not found' });
     }
 
-    // Add comment using your existing conversations table
+    // Add comment using conversations table
     const { data, error } = await supabase
       .from('conversations')
       .insert([{
@@ -319,7 +428,7 @@ app.post('/agent/tickets/:id/comment', verifyToken, verifyAgent, async (req, res
   }
 });
 
-// GET /agent/tickets/:id/comments - Get comments for a ticket (using conversations table)
+// GET /agent/tickets/:id/comments - Get comments for a ticket
 app.get('/agent/tickets/:id/comments', verifyToken, verifyAgent, async (req, res) => {
   try {
     const ticketId = req.params.id;
@@ -348,7 +457,7 @@ app.get('/agent/tickets/:id/comments', verifyToken, verifyAgent, async (req, res
   }
 });
 
-// POST /tickets - Create new ticket (updated to match your schema)
+// POST /tickets - Create new ticket
 app.post('/tickets', verifyToken, async (req, res) => {
   try {
     const { question, description, tags } = req.body;
@@ -378,7 +487,7 @@ app.post('/tickets', verifyToken, async (req, res) => {
         username: userData.email,
         status: 'open',
         upvote_count: 0,
-        conversations: 0, // This field exists in your schema
+        conversations: 0,
         conversation_count: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -399,7 +508,7 @@ app.post('/tickets', verifyToken, async (req, res) => {
   }
 });
 
-// POST /tickets/:id/upvote - Upvote a ticket (using your upvotes table)
+// POST /tickets/:id/upvote - Upvote a ticket
 app.post('/tickets/:id/upvote', verifyToken, async (req, res) => {
   try {
     const ticketId = req.params.id;
