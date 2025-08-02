@@ -11,6 +11,7 @@ import TicketDetail from "./TicketDetail";
 import NavBar from "./NavBar";
 import Profile from "./Profile";
 import AdminDashboard from "./AdminDashboard";
+import ManageUsers from "./ManageUsers";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           {/* Agent/Admin Routes */}
           <Route path="/agent" element={<AgentDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/manage-users" element={<ManageUsers />} />
           <Route path="/ticket/:id" element={<TicketDetail />} />
 
           {/* Logout Route */}

@@ -64,7 +64,10 @@ const Profile = () => {
         },
       });
       const data = await res.json();
-      if (res.ok) setMessage("Upgrade request submitted! We’ll notify you once approved.");
+      if (res.ok)
+        setMessage(
+          "Upgrade request submitted! We’ll notify you once approved."
+        );
       else setMessage(data.message || "Error submitting request.");
     } catch {
       setMessage("Network error. Please try again later.");
@@ -98,19 +101,24 @@ const Profile = () => {
 
         {/* Profile Information */}
         <div className="space-y-4 mb-8">
-          <ProfileRow label="Name"        value={user.name} />
-          <ProfileRow label="Gender"      value={user.gender} />
-          <ProfileRow label="Email"       value={user.email} />
-          <ProfileRow label="Category"    value={user.category} />
-          <ProfileRow label="Role"        value={user.role} badge />
-          <ProfileRow label="Member Since" value={new Date(user.created_at).toLocaleDateString()} />
+          <ProfileRow label="Name" value={user.name} />
+          <ProfileRow label="Gender" value={user.gender} />
+          <ProfileRow label="Email" value={user.email} />
+          <ProfileRow label="Category" value={user.category} />
+          <ProfileRow label="Role" value={user.role} badge />
+          <ProfileRow
+            label="Member Since"
+            value={new Date(user.created_at).toLocaleDateString()}
+          />
         </div>
 
         {/* Upgrade Section for end-users */}
-        {user.role === "end-user" && (                                       /* <-- fixed check */
+        {user.role === "end-user" /* <-- fixed check */ && (
           <div className="border-t border-gray-200 pt-6">
             <div className="text-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Want to help others?</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Want to help others?
+              </h3>
               <p className="text-sm text-gray-600">
                 Request to become a support agent and help resolve tickets
               </p>
@@ -131,7 +139,7 @@ const Profile = () => {
                   Submitting Request...
                 </div>
               ) : (
-                "Request Upgrade to Agent"
+                "Request Upgrade for Agent"
               )}
             </button>
 
@@ -189,8 +197,12 @@ const ProfileRow = ({ label, value, badge = false }) => (
 
 const RoleBox = ({ color, title, text }) => (
   <div className="border-t border-gray-200 pt-6">
-    <div className={`bg-${color}-50 border border-${color}-200 rounded-md p-4 text-center`}>
-      <h3 className={`text-lg font-semibold text-${color}-800 mb-1`}>{title}</h3>
+    <div
+      className={`bg-${color}-50 border border-${color}-200 rounded-md p-4 text-center`}
+    >
+      <h3 className={`text-lg font-semibold text-${color}-800 mb-1`}>
+        {title}
+      </h3>
       <p className={`text-sm text-${color}-600`}>{text}</p>
     </div>
   </div>
