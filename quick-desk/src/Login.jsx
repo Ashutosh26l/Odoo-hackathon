@@ -34,7 +34,7 @@ const Login = () => {
           navigate("/agent");
         } else if (data.user && data.user.role === "admin") {
           console.log("Redirecting admin to agent dashboard");
-          navigate("/agent"); // Admin can access agent dashboard
+          navigate("/admin"); // Admin can access agent dashboard
         } else if (data.user && data.user.role === "end_user") {
           console.log("Redirecting end user to home");
           navigate("/home");
