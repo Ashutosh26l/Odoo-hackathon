@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>QuickDesk – Help Desk Ticketing System</title>
+  
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; max-width: 1000px; margin: auto;">
 
@@ -46,6 +45,14 @@
   <li>Agent dashboard with all tickets</li>
   <li>Admin tools for role upgrade approval & category management</li>
   <li>Upgrade-request workflow (end-user → agent)</li>
+</ul>
+
+<h3>Login Credential</h3>
+<ul>
+  <li>Admin: admin@gmail.com  pass: admin</li>
+  <li>Agent: agent@gmail.com  pass: agent</li>
+  <li>User : user@gmail.com   pass: user</li>
+  
 </ul>
 
 <h3>🖥 Modern UI/UX</h3>
