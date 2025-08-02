@@ -66,7 +66,7 @@ const verifyAgent = async (req, res, next) => {
 
 // POST /signup route for user registration
 app.post("/signup", async (req, res) => {
-  const { name, gender, email, password, category } = req.body; // Removed role parameter
+  const { name, gender, email, password, category } = req.body;
 
   if (!name || !gender || !email || !password || !category) {
     return res.status(400).json({ message: "All fields are required" });
@@ -88,7 +88,7 @@ app.post("/signup", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Removed role from insert - database will use default 'end-user'
+  
     const { data, error } = await supabase
       .from("users")
       .insert([{ name, gender, email, password: hashedPassword, category }])
@@ -167,7 +167,6 @@ app.get("/profile", verifyToken, async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    // Return complete user profile
     res.status(200).json({
       user: {
         id: data.id,
